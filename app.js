@@ -1,11 +1,14 @@
 'use strict';
 const $=id=>document.getElementById(id), clone=v=>JSON.parse(JSON.stringify(v));
 const builtinPhotos=[
+ {id:'builtin-cat',name:'小猫贴贴',url:'assets/cat.jpg'},
  {id:'builtin-surf-flow',name:'海风与自由',url:'assets/surf-flow.jpg'},
  {id:'builtin-summer-surf',name:'夏日冲浪',url:'assets/summer-surf.jpg'}
 ];
 let state={photos:clone(builtinPhotos),active:builtinPhotos[0].id,boards:{},favorites:[],mode:'puzzle'};
 function migrateBuiltins(saved){
+ const hadCat=saved.photos.some(p=>p.id==='builtin-cat');
+ const activeWasBuiltin=/^(builtin-|demo-\d+$)/.test(saved.active||'');
  const builtinIds=new Set(builtinPhotos.map(p=>p.id));
  saved.photos=[...clone(builtinPhotos),...saved.photos.filter(p=>!/^demo-\d+$/.test(p.id)&&!builtinIds.has(p.id))];
  const valid=new Set(saved.photos.map(p=>p.id));
@@ -14,7 +17,7 @@ function migrateBuiltins(saved){
   if(!valid.has(id)){delete saved.boards[id];continue;}
   const b=saved.boards[id];b.slots=b.slots.map(t=>t&&valid.has(t.imageId)?t:null);b.tray=b.tray.filter(t=>valid.has(t.imageId));
  }
- if(!valid.has(saved.active))saved.active=builtinPhotos[0].id;
+ if(!valid.has(saved.active)||(!hadCat&&activeWasBuiltin))saved.active=builtinPhotos[0].id;
  return saved;
 }
 let images=new Map(),db=null,selected=null,history=[],geom=null,showReference=false,pointer=null,saveTimer,toastTimer,saveSequence=0;
